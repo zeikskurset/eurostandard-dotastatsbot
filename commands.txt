@@ -1,0 +1,79 @@
+[commands][help]
+вывести этот файл
+
+[deletecache] dc
+удалить кэш
+
+[cachelifetime]
+!cachelifetime [ms=300000]
+просьба не трогать
+
+[cachegames] 
+!cachegames [alias]
+ВНИМАНИЕ! На значительное время отключает основной функционал бота. Загружает всю вашу историю игр в кэш сервера
+
+[aliases]
+вывести все алиасы
+
+[alias] a
+!alias [alias] [account id] [me=false] [enter=false]
+установить алиас, me - привязка к дискорду
+
+[iam]
+!iam [alias]
+привязать алиас к дискорду или узнать привязанный алиас
+
+[whois]
+!whois [alias]
+узнать дискорд нужного алиаса
+
+[forgetme]
+отвязать алиас от дискорда
+
+[best]
+!best [wins/matches/winrate/net/gpm/xpm/kills/deaths/kda/midas/leaver] [alltime/recent/day]
+вывод лучшего игрока лидерборда за указанный период времени по указанному параметру
+
+[leaders] l
+!leaders [wins/matches/winrate/net/gpm/xpm/damage/kills/deaths/kda/midas/leaver] [alltime/recent/day] [n=3]
+вывести n лучших игроков лидерборда за указанный период времени по указанному параметру
+
+[leaderboard] all
+!leaderboard [wins/matches/winrate/net/gpm/xpm/damage/kills/deaths/kda/midas/leaver] [alltime/recent/day]
+вывести всех игроков лидерборда за указанный период времени по указанному параметру
+
+[enterleaderboard] enter
+!enterleaderboard [alias]
+добавить аккаунт в лидерборд
+
+[leaveleaderboard] leave
+!enterleaderboard [alias]
+убрать аккаунт из лидерборда
+
+[stats] s
+!stats [alias] [wins/matches/winrate/net/gpm/xpm/damage/kills/deaths/kda/midas/leaver] [alltime/recent/day]
+статистика игрока за сегодня
+
+[today] t
+!today [alias]
+подробная статистика игрока за сегодня
+
+[last]
+!last [alias] [verbose=false]
+данные о прошлой игре
+
+[heroname]
+!heroname [hero]
+вывести прозвища героя
+!heroname [hero] [customname]
+добавить герою прозвище
+!heroname [hero] clear
+удалить все прозвища героя
+!heroname [hero] deletelast
+удалить последнее добавленное прозвище героя
+
+[hero] h
+!hero [hero] [alias]
+статистика игрока на герое
+
+
