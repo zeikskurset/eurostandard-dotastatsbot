@@ -3,12 +3,14 @@ const axios = require('axios')
 const fs = require('fs')
 const keyObj = require('./secret_key.json')
 const config = require('./config.json')
-const phrases = require('./text.json')
 const cache = require('./cache.js')
+const phrases = require('./text.json')
 
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]})
 
 let queue = []
+
+let commands = []
 
 let aliases = {}
 
@@ -18,15 +20,13 @@ let leaderboard = []
 
 let queueActive = false;
 
-let queueInterval;
-
-let commands = []
+let queueInterval
 
 //[Utility]
 
 //shortcut for text
 function getPhrase(code) {
-	return phrases[code] && phrases[code][config.language] ? phrases[code][config.language] : phrases.phraseError.ru
+	return phrases[code] && phrases[code][config.language] ? phrases[code][config.language] : phrases.phraseError.ru + " " + code
 }
 
 //checking if account id is valid
@@ -34,30 +34,24 @@ function validAccId(id) {
 	return /^\d\d\d\d\d\d\d\d\d$/.test(id)
 }
 
-//defining criteriae and timelimits and transforming them into numbers
-function getParamIndices(criteria, timelimit) {
-	let criteriae = ["wins", "games", "winrate", "net", "gpm", "xpm", "kills", "deaths", "kda", "leaver", "damage"]
-  let timelimits = ["alltime", "recent", "today"]
-  let cInd = criteriae.indexOf(criteria)
-	let tInd = timelimits.indexOf(timelimit)
-	return {cInd: cInd, tInd: tInd}
-}
+let criteriae = ["wins", "games", "winrate", "net", "gpm", "xpm", "kills", "deaths", "kda", "leaver", "damage"]
+let timelimits = ["alltime", "recent", "today"]
 
 //fns for getting the proper stat from WL info
-let wlfns = [
-	//Wins
-	(a) => {
+let wlfns = {
+	
+	"wins" : (a) => {
 		a.mainCrit = a.json.win
 	},
-	//Total games
-	(a) => {
+	
+	"games": (a) => {
 		a.mainCrit = a.json.win + a.json.lose
 	},
-	//Winrate
-	(a) => {
+	
+	"winrate" : (a) => {
 		a.mainCrit = a.json.win / (a.json.lose + a.json.win) * 100
 	}
-]
+}
 
 
 //[Cache]
@@ -85,7 +79,7 @@ async function fetch(urlextension, forceupdate=false){
 	console.log("Geting " + urlextension)
 	console.log("Forced update: " + forceupdate)
 
-	let noCache = cache[urlextension] == undefined
+	let noCache = cache.data[urlextension] == undefined
 
 	if (noCache)
 		console.log("No cache found")
@@ -93,7 +87,7 @@ async function fetch(urlextension, forceupdate=false){
 	cacheExpired = false;
 
 	if (!noCache) {
-		cacheExpired =  !cache[urlextension].permanent && ((Date.now() - cache[urlextension].timestamp) > cacheLifetime)
+		cacheExpired =  !cache.data[urlextension].permanent && ((Date.now() - cache.data[urlextension].timestamp) > cacheLifetime)
 		if (cacheExpired)
 			console.log("Cache expired")
 	}
@@ -114,7 +108,7 @@ async function fetch(urlextension, forceupdate=false){
   	if (permanent) 
   		console.log("Caching " + urlextension + " permanently")
   	
-  	cache[urlextension] = {
+  	cache.data[urlextension] = {
   		timestamp: Date.now(),
   		data: json,
   		permanent: permanent
@@ -124,25 +118,20 @@ async function fetch(urlextension, forceupdate=false){
 	return cache[urlextension].data
 }
 
-//grabs a bunch of games. returns a promise
-async function getMatches(matchIds) {
-	if (matchIds.length > maxSimultFetch) {
-		console.log("Attempted fetching too many requests")
-		throw new Error()
-		return;
-	}
-
+async function fetchMany(urlexts) {
 	let promises = []
 	let results = []
 
-	matchIds.forEach((matchId)=>{
-		promises.push(fetch("matches/"+matchId.match_id).then((res)=>{
+	console.log("Fetching ")
+
+	urlexts.forEach((urlext)=>{
+		promises.push(fetch(urlext).then((res)=>{
 			results.push(res)
 		}))
 	})
 
 	await Promise.all(promises).then((res) => {
-		console.log("Collected " + matchIds	+ " matches")
+		console.log("Collected " + urlexts.length	+ " urls")
 	});
 
 	return results
@@ -190,6 +179,7 @@ async function getLeaderboard(cInd, tInd) {
 // grabs a part of game caching queue and requests it for caching. !!! Doesnt check
 // whether a game is already cached, so that should be fixed
 
+/*
 function fetchBatchFromQueue(){
 	let batch = queue.length > maxCallsPerMinute ? queue.slice(0, maxCallsPerMinute) : queue
 
@@ -209,6 +199,8 @@ function fetchBatchFromQueue(){
 	})
 }
 
+*/
+
 //[Getting info in advance]
 
 let heroes = fetch("heroes");
@@ -225,7 +217,6 @@ fs.readFile('./commands.txt', 'utf8', function (err,data) {
 
 //[Message handling]
 
-
 function Command(pseudos, handler, enabled) {
 	this.pseudos = pseudos;
 
@@ -239,15 +230,23 @@ function Command(pseudos, handler, enabled) {
 		})
 	}
 
-	this.handler = function(command, args) {
+	this.handle = function(args) {
 		if (!this.enabled) {
 			return getPhrase('commandDisabled')
-		} else if (!this.fits(command)) {
-			return getPhrase("internalError")
-		} else return this.handler(args);
+		} else return this._handler(args);
 	}
+
+	commands.push(this)
 }
 
+let handle = function(commandText, args) {
+	let fitting = commands.filter((command) => {
+		command.fits(commandText)
+	})
+	if (fitting.length === 0) return getPhrase("commandNotFound")
+	//multiple found?
+	return fitting[0].handle(args)
+}
 
 client.on("messageCreate", async function (message) {
 
