@@ -24,6 +24,10 @@ let queueInterval
 
 //[Utility]
 
+function getUsersAlias(userId) {
+	return discordAliases[userId] ? discordAliases[userId].alias : undefined
+}
+
 //shortcut for text
 function getPhrase(code) {
 	return phrases[code] && phrases[code][config.language] ? phrases[code][config.language] : phrases.phraseError.ru + " " + code
@@ -38,8 +42,7 @@ let criteriae = ["wins", "games", "winrate", "net", "gpm", "xpm", "kills", "deat
 let timelimits = ["alltime", "recent", "today"]
 
 //fns for getting the proper stat from WL info
-let wlfns = {
-	
+let fns = {
 	"wins" : (a) => {
 		a.mainCrit = a.json.win
 	},
@@ -118,6 +121,8 @@ async function fetch(urlextension, forceupdate=false){
 	return cache[urlextension].data
 }
 
+
+//kinda deprecated or smth
 async function fetchMany(urlexts) {
 	let promises = []
 	let results = []
@@ -134,45 +139,6 @@ async function fetchMany(urlexts) {
 		console.log("Collected " + urlexts.length	+ " urls")
 	});
 
-	return results
-}
-
-//I'll probably have to rework this later
-async function getLeaderboard(cInd, tInd) {
-  let urlext;
-
-	let results = []
-	let promises = []
-
-	leaderboard.forEach((user) => {
-		if (cInd < 3) {
-			urlext = "players/" + aliases[user] + "/wl"
-		} 
-		if (cInd > 2) {
-			urlext = "players/" + aliases[user] + "/matches"
-		}
-		if (tInd == 1) {
-			urlext += "?limit=20"
-		}
-		if (tInd ==2) {
-			urltext += "?date=1"
-		}
-		let newEntry = {alias: user}
-		results.push(newEntry)
-		promises.push(fetch(urlext).then((res)=>{
-			newEntry.json = res
-		}))
-	})
-
-	if (cInd < 3){
-		await Promise.all(promises).then(() => {
-			console.log("Applying functions for WL stats...")
-			results.every(wlfns[cInd]);
-		});
-	}
-
-	console.log("exiting getLeaderboard")
-	console.log(results)
 	return results
 }
 
@@ -230,16 +196,16 @@ function Command(pseudos, handler, enabled) {
 		})
 	}
 
-	this.handle = function(args) {
+	this.handle = function(args, userId) {
 		if (!this.enabled) {
 			return getPhrase('commandDisabled')
-		} else return this._handler(args);
+		} else return this._handler(args, userId);
 	}
 
 	commands.push(this)
 }
 
-let handle = function(commandText, args) {
+let handle = function(commandText, args, userId) {
 	let fitting = commands.filter((command) => {
 		command.fits(commandText)
 	})
@@ -248,11 +214,65 @@ let handle = function(commandText, args) {
 	return fitting[0].handle(args)
 }
 
+//actual commands
+
+Command(["commands", "help"], (args, userId)=>{
+	return info;
+}, true)
+
+Command(["deletecache"], (args, userId)=>{
+	Object.entries(cache.data).forEach((urlext, data) => {
+		if(!data.permanent) {
+			cache[urlext] = undefined
+		}
+	})
+	return getPhrase("cacheCleared")
+}, true)
+
+Command(["iam"], (args, userId)=>{
+	if (args.length === 0) {
+		if (getUsersAlias(userId)) {
+			return getPhrase("yourAliasIs").format(getUsersAlias(userId))
+		} else {
+			return getPhrase("youHaveNoAlias")
+		}
+	} else {
+		if(!aliases[args[0]]) 
+			return getPhrase("noSuchAlias")
+		discordAliases[userId] = {alias: args[0]}
+		return getPhrase("yourAliasNowIs").format(args[0])
+	}
+}, true)
+
+Command(["alias", "a"], (args, userId)=> {
+	if (args.length < 2) 
+		return getPhrase("seeUsage")
+	if (validAccId(args[0])) 
+		return getPhrase("invalidAlias")
+	if (!validAccId(args[1])) 
+		return getPhrase("invalidAccId")
+
+	aliases[args[0]] = args[1];
+
+	if(args.length == 2) 
+		return getPhrase("aliasAdded").format(args[0], args[1])
+
+	if(args.length === 3) {
+		discordAliases[userId] = {alias: args[0], name: message.member.user.username}
+		return getPhrase("aliasAddedWithDiscord").format(args[0], args[1])
+	}
+
+	if(args.length >= 4) {
+		leaderboard.push(args[0])
+		return getPhrase("aliasAddedWithDiscordAndLeaderboard").format(args[0], args[1])
+	}
+}, true)
+
+Command(["enterleaderboard", "enter"])
+
 client.on("messageCreate", async function (message) {
 
-  function getUsersAlias() {
-  	return discordAliases[message.member.user.id] ? discordAliases[message.member.user.id].alias : undefined
-  }
+  
 
   if (message.author.bot) return;
   if (!message.content.startsWith(prefix)) return;
@@ -261,122 +281,12 @@ client.on("messageCreate", async function (message) {
   const args = commandBody.split(' ');
   const command = args.shift().toLowerCase();
 
-  if (command === "commands" || command === "help") {
-  	message.reply(info)
-  }
-
-  if (command === "deletecache" || command === "dc") {
-  	cache = {}
-  	message.reply("Кэш очищен");
-  }
-
-  if (command === "cachelifetime") {
-  	cacheLifetime = args.length > 0 ? args[0] : cacheLifetime
-  	message.reply("Кэш хранится " + cacheLifetime + "мс")
-  }
-
-  if (command === "iam"){
-  	if (args.length === 0) {
-  		if (discordAliases[message.member.user.id] != undefined) {
-  			message.reply("Вы - " + discordAliases[message.member.user.id].alias)
-  		} else {
-  			message.reply("У вас не привязан алиас")
-  		}
-  	} else {
-  		if(aliases[args[0]] == undefined) {
-  			message.reply("Такого алиаса нет")
-  			return
-  		}
-  		discordAliases[message.member.user.id] = {alias: args[0], name: message.member.user.username}
-  		message.reply("Вы теперь - " + args[0])
-  	}
-  }
-
-  if (command === "whois") {
-  	if (args.length === 0) {
-  		message.reply("Нужно указать алиас")
-  		return
-  	}
-
-	let found = false;
-	let res;
-
-  	Object.entries(discordAliases).forEach(([userid, data]) => {
-  		if(data.alias === args[0]) {
-  			found = true;
-  			res = data.name;
-  		}
-  	})
-
-  	if (!found) {
-  		message.reply("Этот алиас не привязан")
-  		return
-  	}
-
-  	message.reply(args[0] + " это " + res)
-  }
-
-  if (command === "forgetme") {
-  	discordAliases[message.member.user.id] = undefined;
-  	message.reply("От вашего аккаунта отвязан алиас");
-  }
-
-
-  if (command === "alias" || command === "a") {
-  	if (args.length > 1) {
-
-  		if (validAccId(args[0])) {
-  			message.reply("Не удалось создать алиас " + args[0] + ", он может быть айди аккаунта")
-  			return
-  		} 
-  		if (!validAccId(args[1])) {
-  			message.reply(args[1] + " не является айди аккаунта")
-  			return
-  		}
-  		
-  		aliases[args[0]] = args[1];
-
-  		let msgtext = args[0] + " теперь алиас для айди " + args[1];
-
-  		if (args.length > 2 && (args[2] === "me")) {
-  			discordAliases[message.member.user.id] = {alias: args[0], name: message.member.user.username}
-  			msgtext += " привязанного к вашему аккаунту"
-  		}
-
-  		if (args.length > 3 && (args[3] === "enter")) {
-  			leaderboard.push(args[0])
-  			msgtext += " и участвующий в лидерборде"
-  		}
-
-  		message.reply(msgtext)
-  		
-  	} else message.reply("Нужно указать алиас и айди")
-  }
-
-  if (command === "aliases") {
-  	message.reply(JSON.stringify(discordAliases))
-  }
+  message.reply(handle(command, args, message.member.user.id));
 
   //[Network-related commands]
 
   try {
 
-  	if (command === "cachegames") {
-  		let alias = args.length > 0 ? args[0] : getUsersAlias();
-  		if (aliases[alias] == undefined) {
-  			message.reply("Такого алиаса нет")
-  			return
-  		}
-  		fetch("players/"+aliases[alias]+"/matches").then((res)=>{
-  			queue.push(...res);
-  			if (!queueActive) {
-  				queueInterval = setInterval(fetchBatchFromQueue, 60000);
-  				fetchBatchFromQueue();
-  				queueActive = true;
-  			}
-  			message.reply("Начали сохранять данные о " + res.length + "играх");
-  		})
-  	}
 
   	if (queue.length === 0) {
 	  	if (command === "leaderboard" || command === "all") {
