@@ -1,4 +1,7 @@
 secret_key.json
 cache.json
+oldcache.json
+aliases.json
+discordAliases.json
 package.json
 package-lock.json

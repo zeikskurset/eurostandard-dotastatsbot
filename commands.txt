@@ -35,7 +35,7 @@
 убрать аккаунт из лидерборда
 
 [stats] s
-!stats [alias] [wins/matches/winrate/kills/deaths/kda/leaver] [limit]
+!stats [alias]
 статистика игрока
 
 [today] t
