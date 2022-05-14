@@ -1,2 +1,4 @@
 secret_key.json
 cache.json
+package.json
+package-lock.json
