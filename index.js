@@ -1,29 +1,18 @@
 const Discord = require('discord.js')
 const axios = require('axios')
 const fs = require('fs')
-const config = require('./secret_key.json')
+const keyObj = require('./secret_key.json')
+const config = require('./config.json')
+const phrases = require('./text.json')
+const cache = require('./cache.js')
+
+console.log(cache)
 
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]})
-
-const prefix = "!"
-
-const APIURL = "https://api.opendota.com/api/";
-
-const cacheFilename = "cache.json"
-
-let cacheLifetime = 300000;
-
-const cacheDumpInterval = 300000;
-
-const maxSimultFetch = 20;
-
-const maxCallsPerMinute = 50;  
 
 let queue = []
 
 let aliases = {}
-
-let cache = {}
 
 let discordAliases = {}
 
@@ -33,7 +22,14 @@ let queueActive = false;
 
 let queueInterval;
 
+let commands = []
+
 //[Utility]
+
+//shortcut for text
+function getPhrase(code) {
+	return phrases[code] && phrases[code][config.language] ? phrases[code][config.language] : phrases.phraseError.ru
+}
 
 //checking if account id is valid
 function validAccId(id) {
@@ -68,33 +64,18 @@ let wlfns = [
 
 //[Cache]
 
-function dumpCache(){
-	fs.writeFile(cacheFilename, JSON.stringify(cache), (err) => {
-		if (err)
-			console.log(err)
-	})
-}
-
-function loadLatestCache() {
-	fs.readFile(cacheFilename, 'utf8', function (err,data) {
-  	if (err) {
-  		console.log(err);
-  	}
-  	cache = JSON.parse(data);
-	});
-}
 
 // load cache on starting the bot if cacheFilename is provided earlier
-if (cacheFilename)
-	loadLatestCache();
+if (config.cacheFilename)
+	cache.loadLatest()
 
 // start dumping cache periodically after some time
 setTimeout(() => {
 	setInterval(() => {
-		dumpCache();
+		cache.dump();
 		console.log("Dumping cache")
-	}, cacheDumpInterval)
-}, cacheDumpInterval)
+	}, config.cacheDumpInterval)
+}, config.cacheDumpInterval)
 
 
 
@@ -246,6 +227,29 @@ fs.readFile('./commands.txt', 'utf8', function (err,data) {
 
 
 //[Message handling]
+
+
+function Command(pseudos, handler, enabled) {
+	this.pseudos = pseudos;
+
+	this._handler = handler;
+
+	this.enabled = enabled;
+
+	this.fits = function(command) {
+		return this.pseudos.any((pseudo) => {
+			return pseudo == command
+		})
+	}
+
+	this.handler = function(command, args) {
+		if (!this.enabled) {
+			return getPhrase('commandDisabled')
+		} else if (!this.fits(command)) {
+			return getPhrase("internalError")
+		} else return this.handler(args);
+	}
+}
 
 
 client.on("messageCreate", async function (message) {
@@ -410,4 +414,4 @@ client.on("messageCreate", async function (message) {
 
 });
 
-client.login(config.secret_key)
+client.login(keyObj.secret_key)
