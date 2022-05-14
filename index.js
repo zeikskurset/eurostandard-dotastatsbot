@@ -6,8 +6,6 @@ const config = require('./config.json')
 const phrases = require('./text.json')
 const cache = require('./cache.js')
 
-console.log(cache)
-
 const client = new Discord.Client({intents: ["GUILDS", "GUILD_MESSAGES"]})
 
 let queue = []
@@ -73,7 +71,6 @@ if (config.cacheFilename)
 setTimeout(() => {
 	setInterval(() => {
 		cache.dump();
-		console.log("Dumping cache")
 	}, config.cacheDumpInterval)
 }, config.cacheDumpInterval)
 
@@ -101,7 +98,7 @@ async function fetch(urlextension, forceupdate=false){
 			console.log("Cache expired")
 	}
 
-	permanent = /^matches/.test(urlextension)
+	permanent = /^matches/.test(urlextension) || urlextension === "heroes"
 
 	if (forceupdate || noCache || cacheExpired) {
 		console.log("Requesting " + urlextension + "...")
