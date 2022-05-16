@@ -1,60 +1,74 @@
-[commands][help]
-вывести этот файл
+**[commands]**
+_вывести этот файл_
 
-[deletecache] dc
-удалить кэш
+**[alias] a**
+!alias [alias] [account id] [iam] [enter]
+!a alise 148814881 iam enter
+!a alise 148814881 iam
+!a alise 148814881 
+_установить алиас, iam - привязка к дискорду, enter - добавление в лидерборд_
 
-[aliases]
-вывести все алиасы
-
-[alias] a
-!alias [alias] [account id] [me=false] [enter=false]
-установить алиас, me - привязка к дискорду
-
-[iam]
+**[iam]**
 !iam [alias]
-привязать алиас к дискорду или узнать привязанный алиас
+!iam alise
+!iam
+_привязать алиас к дискорду или узнать привязанный алиас_
 
-[leaderboard] all
-!leaderboard [wins/matches/winrate] [limit=alltime]
+**[leaderboard] all**
+_сравнить всех игроков лидерборда по указанному параметру_
+!leaderboard [**wins**/matches/winrate] [limit=all games]
+!all matches 100
+!all winrate
+!all
+_винрейт считается по всем играм, либо по указанному числу игр_
 !leaderboard [gpm/xpm/damage/kills/deaths/kda/leaver] [limit=20(max)]
-вывести всех игроков лидерборда по указанному параметру
+!all kills 20 
+!all kills
+_показатель считается по 20 играм, либо по указанному меньшему числу игр. потом прикручу возможность сравнивать кда по всем играм_
 
-[enterleaderboard] enter
+**[leaders] l**
+!l kills 10 5
+!l
+_аналогично предыдущей команде, только выводит 3 лучших, либо n лучших (n указывать в конце)_
+
+**[best]**
+!best kills 10
+!best
+_аналогично двум предыдущим, но выводит только одного игрока_
+
+**[enterleaderboard] enter**
 !enterleaderboard [alias]
-добавить аккаунт в лидерборд
+!enter alise
+!enter
+_добавить алиас в лидерборд_
 
-[leaveleaderboard] leave
-!enterleaderboard [alias]
-убрать аккаунт из лидерборда
+**[leaveleaderboard] leave**
+!leaveleaderboard [alise]
+!leave alise
+!leave
+_убрать алиас из лидерборда_
 
-[stats] s
+**[stats] s**
 !stats [alias]
-статистика игрока
+!s alise
+!s
+_статистика за 20 игр_
 
-[streak]
-!streak [alias]
+**[last]**
+!last [alias]
+!last alise hero_damage
+!last alise
+!last
+_данные о прошлой игре; можно вторым аргументом указать один из показателей: net\_worth, level, party\_size, hero\_damage, hero\_healing, tower\_damage, gold\_per\_min, xp\_per\_min, personaname _
 
-[last]
-!last [alias] [verbose=false]
-данные о прошлой игре
+**[game] g**
+!game [alias] [offset]
+!g alise 2 party_size
+!g alise 2 
+!g
+_аналогична last, только можно указать номер игры (последняя - 1, предпоследняя - 2...)_
 
-[wordcloud] w
-!wordcloud [word]
-узнать сколько раз за вами числится данное слово
-
-[heroname]
-!heroname [hero]
-вывести прозвища героя
-!heroname [hero] [customname]
-добавить герою прозвище
-!heroname [hero] clear
-удалить все прозвища героя
-!heroname [hero] deletelast
-удалить последнее добавленное прозвище героя
-
-[hero] h
-!hero [hero] [alias]
-статистика игрока на герое
-
-
+**[hero] h**
+!hero [alias] [hero]
+!h alise lone
+_винрейт на герое_

@@ -1,20 +1,32 @@
 const config = require('./config.json')
 const cache = require('./cache.js')
 const fs = require('fs')
+const phrases = require('./text.json')
+
+function getPhrase(code) {
+	return phrases[code] && phrases[code][config.language] ? phrases[code][config.language] : phrases.phraseError.ru + " " + code
+	
+}
 
 class App {
 	constructor(){
 		this.commands = []
 		this.users = []
 		this.cache = {}
-		this.helpInfo = "helpInfo failed to load"
+		this.helpInfo = "commandsInfo failed to load"
 		this.dotaconstants = {}
 
 		if(config.cacheFilename)
 			this.cache = cache.loadLatest()
 
 		try {
-			this.helpInfo = fs.readFileSync('./commands.txt', 'utf8')
+			this.commandsInfo = fs.readFileSync('./commands.txt', 'utf8')
+		} catch (err) {
+			console.log(err)
+		}
+
+		try {
+			this.helpInfo = fs.readFileSync('./help.txt', 'utf8')
 		} catch (err) {
 			console.log(err)
 		}
@@ -102,10 +114,14 @@ class Command {
 		}
 
 		this.handle = function(args, userId) {
-			if (!this.enabled) {
-				//fix!!!!
-				return "Command disabled"
-			} else return this._handler(args, userId);
+			try {
+				if (!this.enabled) {
+					return getPhrase("commandDisabled")
+				}
+				return this._handler(args, userId);
+			} catch (err) {
+				return err.toString().slice(0, 50)
+			}
 		}
 	}
 }

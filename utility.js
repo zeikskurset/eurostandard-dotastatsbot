@@ -1,4 +1,9 @@
 const config = require('./config.json')
+const phrases = require('./text.json')
+
+function getPhrase(code) {
+	return phrases[code] && phrases[code][config.language] ? phrases[code][config.language] : phrases.phraseError.ru + " " + code	
+}
 
 module.exports.playerWon = function(game) {
 	return (game.radiant_win && game.player_slot < 128) || (!game.radiant_win && game.player_slot > 127) 

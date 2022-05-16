@@ -32,7 +32,11 @@ let app = new App();
 
 //commands
 
-app.addCommand(new Command(["commands", "help"], (args, userId)=>{
+app.addCommand(new Command(["commands"], (args, userId)=>{
+	return app.commandsInfo;
+}))
+
+app.addCommand(new Command(["help"], (args, userId)=>{
 	return app.helpInfo;
 }))
 
@@ -138,7 +142,7 @@ app.addCommand(new Command(["leaderboard", "all"], async (args, userId) => {
 }))
 
 app.addCommand(new Command(["leaders", "l"], async (args, userId) => {
-	let limit = args.length > 1 ? args[1] : 3
+	let limit = args.length > 2 ? args[2] : 3
 	return await handleLeaderboard(args, limit)
 }))
 
@@ -174,6 +178,8 @@ app.addCommand(new Command(["stats", "s"], async (args, userId) => {
 
 async function handleGame(user, offset, stat) {
 	let games = await network.fetch(`players/${user.accId}/matches`, app.cache)
+	if (games.length == 0)
+		return getPhrase("noGames")
 	let gameId = games[offset - 1].match_id
 
 	let game = await network.fetch(`matches/${gameId}`, app.cache)
@@ -219,7 +225,35 @@ app.addCommand(new Command(["wordcloud", "w"], async (args, userId) => {
 	let word = args.length > 1 ? args[1] : keys[ keys.length * Math.random() << 0]
 
 	return getPhrase("wordcloud").format(user.name, word, wordcloud[word] ? wordcloud[word] : 0)
+}))
 
+app.addCommand(new Command(["hero", "h"], async (args, userId) => {
+	if(args.length < 2)
+		return getPhrase("seeUsage")
+
+	let user = app.getUserByAlias(args[0])
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	let heroname = args.slice(1).join(' ').toLowerCase()
+	let hero = Object.values(app.dotaconstants.heroes).filter((hero) =>{
+		return hero.localized_name.toLowerCase().startsWith(heroname)
+	})
+
+	if(hero.length == 0)
+		return getPhrase("heroNotFound")
+
+	let heroId = hero[0].id
+
+	let wl = await network.fetch(`players/${user.accId}/wl?hero_id=${heroId}`, app.cache)
+
+	return getPhrase("heroWinrate").format(user.name, hero[0].localized_name, (wl.win/(wl.lose+wl.win)*100).toLocaleString(undefined, {maxFractiondigits:2}))
+}))
+
+app.addCommand(new Command(["aliases"], (args, userId) => {
+	return app.users.map((user) => {
+		return user.name
+	}).join(' ')
 }))
 
 
