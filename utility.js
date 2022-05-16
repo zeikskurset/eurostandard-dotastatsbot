@@ -26,7 +26,7 @@ module.exports.stringifyLeaderboard = function(criteria, leaderboard) {
 }
 
 module.exports.stringifyStats = function(stats) {
-	let res = "Stats for " + stats.alias + "\n"
+	let res = getPhrase("statsFor") + stats.alias + "\n"
 	for (let crit in stats) {
 		if (config.criteriae.includes(crit)) {
 			res += crit + ": " + stats[crit].data + "\n"
@@ -61,7 +61,7 @@ module.exports.stringifyGame = function(game, app) {
 
 		}
 	}).map((player) => {
-		return `${player.player ? player.player : "рандом"} _${player.hero} ${player.level}lvl_    **${player.kills}  ${player.deaths}  ${player.assists}**    ${player.net_worth} midas:${player.hand_of_midas ? "☑" : "☒"} \n`
+		return `${player.player ? player.player : getPhrase("random")} _${player.hero} ${player.level}lvl_    **${player.kills}  ${player.deaths}  ${player.assists}**    ${player.net_worth} midas:${player.hand_of_midas ? "☑" : "☒"} \n`
 	})
 
 	let radiant = fineprint(game.radiant_win, players.slice(0,5), "Radiant")
