@@ -1,6 +1,19 @@
 const phrases = require('./text.json')
 const fs = require('fs')
 const network = require('./network.js')
+const utility = require('./utility.js')
+const {Alias} = require('./alias.js')
+const {App, Command} = require('./core.js')
+const config = require('./config.json')
+const cache = require('./cache.js')
+
+//brainlet.jpg
+String.prototype.format = function () {
+  var args = arguments;
+  return this.replace(/{([0-9]+)}/g, function (match, index) {
+    return typeof args[index] == 'undefined' ? match : args[index];
+  });
+};
 
 //shortcut for text
 function getPhrase(code) {
@@ -8,93 +21,30 @@ function getPhrase(code) {
 	
 }
 
+//initializing
 
-let appData = {
-	commands: [],
-	users: [],
-
-	getUserByAlias: (alias) => {
-		return this.users.filter((user) => {
-			return user.name === alias
-		})[0]
-	},
-
-	getUserByDiscordId: (discordId) => {
-		return this.users.filter((user) => {
-			return user.discordId === discordId
-		})[0]
-	},
-
-	getLeaderboard: () => {
-		return this.users.filter((user) => {
-			return user.inLeaderboard
-		})
-	}
-}
-
-fs.readFile('./commands.txt', 'utf8', function (err,data) {
-  if (err) {
-  	return console.log(err);
-  }
-  appData.helpInfo = data;
-});
-
-class Command {
-	constructor(pseudos, handler, enabled, app) {
-		this.pseudos = pseudos;
-
-		this._handler = handler;
-
-		this.enabled = enabled;
-
-		this.appData = app
-
-		this.fits = function(command) {
-			return this.pseudos.some((pseudo) => {
-				return pseudo == command
-			})
-		}
-
-		this.handle = function(args, userId) {
-			if (!this.enabled) {
-				return getPhrase('commandDisabled')
-			} else return this._handler(args, userId);
-		}
-
-		app.commands.push(this)
-
-		return this
-	}
-}
-
-let handle = async function(commandText, args, userId) {
-	let fitting = commands.filter((command) => {
-		return command.fits(commandText)
-	})
-	if (fitting.length === 0) return getPhrase("commandNotFound")
-	//multiple found?
-	return await fitting[0].handle(args, userId)
-}
+let app = new App();
 
 //actual commands
 
-new Command(["commands", "help"], (args, userId)=>{
-	return info;
-}, true)
+app.addCommand(new Command(["commands", "help"], (args, userId)=>{
+	return app.helpInfo;
+}))
 
-new Command(["deletecache"], (args, userId)=>{
-	for(urlext in cache.data) {
-		if(!cache.data[urlext].permanent)
-			cache.data[urlext] = undefined
+
+app.addCommand(new Command(["deletecache"], (args, userId)=>{
+	for(urlext in app.cache) {
+		if(!app.cache[urlext].permanent)
+			delete app.cache[urlext]
 	}
-	console.log(cache.data)
 	return getPhrase("cacheCleared")
-}, true)
+}))
 
-new Command(["iam"], (args, userId)=>{
+
+app.addCommand(new Command(["iam"], (args, userId)=>{
 	if (args.length === 0) {
 		if (getUsersAlias(userId)) {
-			return getPhrase("yourAliasIs").format(getUsersAlias(userId))
+			return getPhrase("yourAliasIs").format(app.getUserByDiscordId(userId).alias)
 		} else {
 			return getPhrase("youHaveNoAlias")
 		}
@@ -105,7 +55,7 @@ new Command(["iam"], (args, userId)=>{
 		dumpAliases()
 		return getPhrase("yourAliasNowIs").format(args[0])
 	}
-}, true)
+}))
 
 new Command(["alias", "a"], (args, userId)=> {
 	if (args.length < 2) 
@@ -248,4 +198,4 @@ new Command(["last"], async (args, userId) => {
 	return stringifyStats(results)
 }, true)
 
-module.exports = appData
+module.exports = app

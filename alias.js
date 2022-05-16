@@ -14,6 +14,7 @@ module.exports = class Alias {
 		})
 
 		app.users.push(this)
+		app.dumpUsers()
 
 		return this
 	}

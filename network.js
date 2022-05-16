@@ -1,5 +1,7 @@
-const cache = require('./cache.js')
 const axios = require('axios')
+const config = require('./config.json')
+const cachemodule = require('./cache.js')
+const fns = require('./fns.js')
 
 module.exports.criteriae = ["wins", "games", "winrate", "gpm", "xpm", "kills", "deaths", "kda", "lasthit", "leaver", "damage", "heal", "tower"]
 
@@ -27,9 +29,8 @@ module.exports.fetchLeaderboard = async function(leaderboard, criteria, playerli
 	return results
 }
 
-module.exports.fetch = async function(urlextension, forceupdate=false){
+module.exports.fetch = async function(urlextension, cache){
 	console.log("Geting " + urlextension)
-	console.log("Forced update: " + forceupdate)
 
 	let noCache = cache.data[urlextension] == undefined
 
@@ -39,34 +40,37 @@ module.exports.fetch = async function(urlextension, forceupdate=false){
 	cacheExpired = false;
 
 	if (!noCache) {
-		cacheExpired =  !cache.data[urlextension].permanent && ((Date.now() - cache.data[urlextension].timestamp) > config.cacheLifetime)
+		cacheExpired =  !cache[urlextension].permanent && ((Date.now() - cache[urlextension].timestamp) > config.cacheLifetime)
 		if (cacheExpired)
 			console.log("Cache expired")
 	}
 
 	permanent = /^matches/.test(urlextension) || urlextension === "heroes"
 
-	if (forceupdate || noCache || cacheExpired) {
+	if (noCache || cacheExpired) {
 		console.log("Requesting " + urlextension + "...")
+
 		let result = await axios.get(config.APIURL + urlextension)
+
 		console.log("Done " + urlextension)
+
 		if (result.status != 200) {
 			console.log("Fetch failed: " + result.status)
 			throw new Error();
 		}
 		
-  	let json =  result.data;
-  	
-  	if (permanent) 
-  		console.log("Caching " + urlextension + " permanently")
-  	
-  	cache.data[urlextension] = {
-  		timestamp: Date.now(),
-  		data: json,
-  		permanent: permanent
-  	}
+	  	let json =  result.data;
+	  	
+	  	if (permanent) 
+	  		console.log("Caching " + urlextension + " permanently")
+	  	
+	  	cache[urlextension] = {
+	  		timestamp: Date.now(),
+	  		data: json,
+	  		permanent: permanent
+	  	}
 
-  	cache.dump()
+	  	cachemodule.dump(cache)
 	}
 
 	return cache.data[urlextension].data
