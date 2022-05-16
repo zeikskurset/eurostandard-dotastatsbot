@@ -57,7 +57,7 @@ module.exports.stringifyGame = function(game, app) {
 			assists:player.assists,
 			net_worth: player.net_worth,
 			level: player.level,
-			hand_of_midas: hasItem(player, 64)
+			hand_of_midas: hasItem(player, 65)
 
 		}
 	}).map((player) => {
