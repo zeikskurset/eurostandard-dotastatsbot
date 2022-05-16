@@ -6,7 +6,7 @@ module.exports.validAccId = function(id) {
 	return /^\d\d\d\d\d\d\d\d\d$/.test(id)
 }
 
-function stringifyLeaderboard(criteria, leaderboard) {
+module.exports.stringifyLeaderboard = function(criteria, leaderboard) {
 	if(leaderboard.length == 0)
 		return getPhrase("noParticipants")
 	let res = criteria + "\n"
@@ -16,7 +16,7 @@ function stringifyLeaderboard(criteria, leaderboard) {
 	return res
 }
 
-function stringifyStats(stats) {
+module.exports.stringifyStats = function(stats) {
 	let res = "Stats for " + stats.alias + "\n"
 	for (let crit in stats) {
 		if (criteriae.includes(crit)) {

@@ -3,9 +3,9 @@ const config = require('./config.json')
 const cachemodule = require('./cache.js')
 const fns = require('./fns.js')
 
-module.exports.criteriae = ["wins", "games", "winrate", "gpm", "xpm", "kills", "deaths", "kda", "lasthit", "leaver", "damage", "heal", "tower"]
+const criteriae = config.criteriae
 
-module.exports.fetchLeaderboard = async function(leaderboard, criteria, playerlimit, gameslimit) {
+let fetchLeaderboard = async function(cache, leaderboard, criteria, playerlimit, gameslimit) {
 	let urlexts = []
 
 	const wlCrit = criteriae.slice(0,3).includes(criteria)
@@ -14,11 +14,11 @@ module.exports.fetchLeaderboard = async function(leaderboard, criteria, playerli
 
 	const urlParam = gameslimit == 0 ? "" : "?limit=" + gameslimit
 
-	for(let alias of leaderboard) {
-		urlexts.push({urlext: `players/${aliases[alias]}/${urlExtEnding}${urlParam}`, alias: alias})
+	for(let user of leaderboard) {
+		urlexts.push({urlext: `players/${user.accId}/${urlExtEnding}${urlParam}`, alias: user.name})
 	}
 
-	results = await fetchMany(urlexts);
+	results = await fetchMany(cache, urlexts);
 
 	results = results.map(fns[criteria]).sort((a,b) => { return b.data - a.data})
 
@@ -29,10 +29,10 @@ module.exports.fetchLeaderboard = async function(leaderboard, criteria, playerli
 	return results
 }
 
-module.exports.fetch = async function(urlextension, cache){
+let fetch = async function(urlextension, cache){
 	console.log("Geting " + urlextension)
 
-	let noCache = cache.data[urlextension] == undefined
+	let noCache = cache[urlextension] == undefined
 
 	if (noCache)
 		console.log("No cache found")
@@ -73,12 +73,12 @@ module.exports.fetch = async function(urlextension, cache){
 	  	cachemodule.dump(cache)
 	}
 
-	return cache.data[urlextension].data
+	return cache[urlextension].data
 }
 
-module.exports.fetchMany = async function(urlexts) {
+let fetchMany = async function(cache, urlexts) {
 	if(urlexts.length >= config.maxSimultFetch){
-		console.log("Attempted")
+		console.log("Attempted fetching " + urlexts.length + " urls")
 	}
 
 	let promises = []
@@ -87,7 +87,7 @@ module.exports.fetchMany = async function(urlexts) {
 	console.log("Fetching " + urlexts.length	+ " urls")
 
 	urlexts.forEach((req)=>{
-		promises.push(fetch(req.urlext).then((res)=>{
+		promises.push(fetch(req.urlext, cache).then((res)=>{
 			req.data = res
 			results.push(req)
 		}))
@@ -99,3 +99,5 @@ module.exports.fetchMany = async function(urlexts) {
 
 	return results
 }
+
+module.exports = {fetch, fetchMany, fetchLeaderboard}

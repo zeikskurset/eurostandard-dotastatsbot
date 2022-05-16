@@ -26,10 +26,18 @@ class App {
 
 		this.dumpUsers = () => {
 			try {
-				fs.writeFileSync('./users.json', this.users)
+				fs.writeFileSync('./users.json', JSON.stringify(this.users))
 			} catch (err) {
 				console.log(err)
 			}
+		}
+
+		this.addUser = (user) => {
+			this.user = this.users.filter((u) => {
+				return u.name !== user.name
+			})
+			this.users.push(user)
+			this.dumpUsers()
 		}
 
 		this.getUserByAlias = (alias) => {
