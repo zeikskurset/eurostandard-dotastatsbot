@@ -191,6 +191,8 @@ async function handleGame(user, offset, stat) {
 	let games = await network.fetch(`players/${user.accId}/matches`, app.cache)
 	if (games.length == 0)
 		return getPhrase("noGames")
+	if (offset > games.length)
+		return getPhrase("noGames")
 	let gameId = games[offset - 1].match_id
 
 	let game = await network.fetch(`matches/${gameId}`, app.cache)
