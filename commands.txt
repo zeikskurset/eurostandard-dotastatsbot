@@ -15,14 +15,8 @@
 !iam [alias]
 привязать алиас к дискорду или узнать привязанный алиас
 
-[best]
-
-
-[leaders] l
-
-
 [leaderboard] all
-!leaderboard [wins/matches/winrate] [limit=allgames]
+!leaderboard [wins/matches/winrate] [limit=alltime]
 !leaderboard [gpm/xpm/damage/kills/deaths/kda/leaver] [limit=20(max)]
 вывести всех игроков лидерборда по указанному параметру
 
@@ -38,9 +32,8 @@
 !stats [alias]
 статистика игрока
 
-[today] t
-!today [alias]
-статистика игрока за сегодня
+[streak]
+!streak [alias]
 
 [last]
 !last [alias] [verbose=false]

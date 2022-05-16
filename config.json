@@ -3,7 +3,6 @@
 	"APIURL": "https://api.opendota.com/api/",
 	"cacheFilename": "cache.json",
 	"cacheLifetime": 300000,
-	"cacheDumpInterval": 300000,
 	"maxSimultFetch": 20,
 	"maxCallsPerMinute": 50,
 	"language": "ru"
