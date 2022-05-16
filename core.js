@@ -8,6 +8,7 @@ class App {
 		this.users = []
 		this.cache = {}
 		this.helpInfo = "helpInfo failed to load"
+		this.dotaconstants = {}
 
 		if(config.cacheFilename)
 			this.cache = cache.loadLatest()
@@ -20,6 +21,13 @@ class App {
 
 		try {
 			this.users = JSON.parse(fs.readFileSync('./users.json', 'utf8'))
+		} catch (err) {
+			console.log(err)
+		}
+
+		try {
+			this.dotaconstants.heroes = require('./dotaconstants/build/heroes.json')
+			this.dotaconstants.items = require('./dotaconstants/build/items.json')
 		} catch (err) {
 			console.log(err)
 		}
@@ -49,6 +57,12 @@ class App {
 		this.getUserByDiscordId = (discordId) => {
 			return this.users.filter((user) => {
 				return user.discordId === discordId
+			})[0]
+		}
+
+		this.getUserByAccId = (accId) => {
+			return this.users.filter((user) => {
+				return user.accId == accId
 			})[0]
 		}
 
@@ -89,7 +103,8 @@ class Command {
 
 		this.handle = function(args, userId) {
 			if (!this.enabled) {
-				return getPhrase('commandDisabled')
+				//fix!!!!
+				return "Command disabled"
 			} else return this._handler(args, userId);
 		}
 	}

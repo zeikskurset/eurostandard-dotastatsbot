@@ -6,6 +6,7 @@ const {Alias} = require('./alias.js')
 const {App, Command} = require('./core.js')
 const config = require('./config.json')
 const cache = require('./cache.js')
+const fns = require('./fns.js')
 
 //shortcuts
 
@@ -119,7 +120,7 @@ app.addCommand(new Command(["leaveleaderboard", "leave"], (args, userId) => {
 	return getPhrase("leaderboardLeaveSuccess")
 }))
 
-app.addCommand(new Command(["leaderboard", "all"], async (args, userId) => {
+async function handleLeaderboard(args, limit) {
 	let criteria = args.length > 0 ? args[0] : criteriae[0]
 
 	let gameslimit = args.length > 1 ? args[1] : 0
@@ -127,84 +128,99 @@ app.addCommand(new Command(["leaderboard", "all"], async (args, userId) => {
 	if (!criteriae.includes(criteria))
 		return getPhrase("noSuchCriteria")
 
-	let results = await network.fetchLeaderboard(app.cache, app.getLeaderboard(), criteria, 0, gameslimit)
+	let results = await network.fetchLeaderboard(app.cache, app.getLeaderboard(), criteria, limit, gameslimit)
 
 	return utility.stringifyLeaderboard(criteria, results)
+}
+
+app.addCommand(new Command(["leaderboard", "all"], async (args, userId) => {
+	return await handleLeaderboard(args, 0)
+}))
+
+app.addCommand(new Command(["leaders", "l"], async (args, userId) => {
+	let limit = args.length > 1 ? args[1] : 3
+	return await handleLeaderboard(args, limit)
+}))
+
+app.addCommand(new Command(["best"], async (args, userId) => {
+	return await handleLeaderboard(args, 1)
+}))
+
+app.addCommand(new Command(["stats", "s"], async (args, userId) => {
+	let user = args.length > 0 ? app.getUserByAlias(args[0]) : app.getUserByDiscordId(userId)
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	let data = await network.fetch(`players/${user.accId}/recentMatches`, app.cache)
+
+	let results = {alias:user.name}
+
+	for(let crit of criteriae.slice(3)) {
+		results[crit] = {criteria: crit, data: data}
+		fns[crit](results[crit])
+	}
+
+	let wins = data.filter((game) => {
+		return utility.playerWon(game)
+	}).length
+
+	results["wins"] = {
+		data: wins,
+		criteria: "wins"
+	}
+
+	return utility.stringifyStats(results)
+}))
+
+async function handleGame(user, offset, stat) {
+	let games = await network.fetch(`players/${user.accId}/matches`, app.cache)
+	let gameId = games[offset - 1].match_id
+
+	let game = await network.fetch(`matches/${gameId}`, app.cache)
+
+	if (stat){
+		let res = JSON.stringify(game.players.filter(player => player.account_id==user.accId)[0][stat])
+		if (!res) {
+			return getPhrase("noData")
+		} 
+		return res
+	}
+
+	return utility.stringifyGame(game, app)
+}
+
+app.addCommand(new Command(["last"], async (args, userId) => {
+	let user = args.length > 0 ? app.getUserByAlias(args[0]) : app.getUserByDiscordId(userId)
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	return await handleGame(user, 1, args[1])
+}))
+
+app.addCommand(new Command(["game", "g"], async (args, userId) => {
+	let user = args.length > 0 ? app.getUserByAlias(args[0]) : app.getUserByDiscordId(userId)
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	let offset = isNaN(args[1]) ? 1 : args[1]
+
+	return await handleGame(user, offset, args[2])
+}))
+
+app.addCommand(new Command(["wordcloud", "w"], async (args, userId) => {
+	let user = args.length > 0 ? app.getUserByAlias(args[0]) : app.getUserByDiscordId(userId)
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	let wordcloud = await network.fetch(`players/${user.accId}/wordcloud`, app.cache)
+	wordcloud = wordcloud["my_word_counts"]
+
+	let keys = Object.keys(wordcloud)
+	let word = args.length > 1 ? args[1] : keys[ keys.length * Math.random() << 0]
+
+	return getPhrase("wordcloud").format(user.name, word, wordcloud[word] ? wordcloud[word] : 0)
 
 }))
 
-new Command(["leaders", "l"], async (args, userId) => {
-	let criteria = args.length > 0 ? args[0] : criteriae[0]
-
-	let limit = args.length > 1 ? args[1] : 3
-
-	let gameslimit = args.length > 2 ? args[2] : 0
-
-	if (!criteriae.includes(criteria))
-		return getPhrase("noSuchCriteria")
-
-	let results = await getLeaderboard(criteria, limit, gameslimit)
-
-	return stringifyLeaderboard(criteria, results)
-
-}, true)
-
-new Command(["best"], async (args, userId) => {
-	let criteria = args.length > 0 ? args[0] : criteriae[0]
-
-	let gameslimit = args.length > 1 ? args[1] : 0
-
-	if (!criteriae.includes(criteria))
-		return getPhrase("noSuchCriteria")
-
-	let results = await getLeaderboard(criteria, 1, gameslimit)
-
-	return stringifyLeaderboard(criteria, results)
-
-}, true)
-
-new Command(["stats", "s"], async (args, userId) => {
-	let alias = args.length > 0 ? args[0] : getUsersAlias(userId)
-	if(typeof aliases[alias] == "undefined")
-		return getPhrase("noSuchAlias")
-	let data = await fetch(`players/${aliases[alias]}/recentMatches`)
-	let results = {alias:alias, data:data}
-	for(let crit of criteriae.slice(3)) {
-		results[crit] = {criteria: crit, data: data}
-		fns[crit](results[crit])
-	}
-	let wins = data.filter((game) => {
-		return playerWon(game)
-	}).length
-	results["wins"] = {
-		data: wins,
-		criteria: "wins"
-	}
-	results["data"] = undefined
-	return stringifyStats(results)
-}, true)
-
-new Command(["last"], async (args, userId) => {
-	let alias = args.length > 0 ? args[0] : getUsersAlias(userId)
-	if(typeof aliases[alias] == "undefined")
-		return getPhrase("noSuchAlias")
-	let data = await fetch(`players/${aliases[alias]}/recentMatches`)
-	data = data.slice(0, 1)
-	console.log(data)
-	let results = {alias:alias, data:data}
-	for(let crit of criteriae.slice(3)) {
-		results[crit] = {criteria: crit, data: data}
-		fns[crit](results[crit])
-	}
-	let wins = data.filter((game) => {
-		return playerWon(game)
-	}).length
-	results["wins"] = {
-		data: wins,
-		criteria: "wins"
-	}
-	results["data"] = undefined
-	return stringifyStats(results)
-}, true)
 
 module.exports = app

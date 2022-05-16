@@ -45,7 +45,7 @@ let fetch = async function(urlextension, cache){
 			console.log("Cache expired")
 	}
 
-	permanent = /^matches/.test(urlextension) || urlextension === "heroes"
+	permanent = /^matches/.test(urlextension)
 
 	if (noCache || cacheExpired) {
 		console.log("Requesting " + urlextension + "...")
