@@ -26,10 +26,10 @@ module.exports.stringifyLeaderboard = function(criteria, leaderboard) {
 }
 
 module.exports.stringifyStats = function(stats) {
-	let res = getPhrase("statsFor") + stats.alias + "\n"
+	let res = "__**" + getPhrase("statsFor") + stats.alias + "**__\n"
 	for (let crit in stats) {
 		if (config.criteriae.includes(crit)) {
-			res += crit + ": " + stats[crit].data + "\n"
+			res += "_" + crit + ":_ " + stats[crit].data.toLocaleString(undefined, {maxFractionDigits: 2}) + "\n"
 		}
 	} 
 	return res

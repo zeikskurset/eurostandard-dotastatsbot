@@ -72,7 +72,7 @@ app.addCommand(new Command(["iam"], (args, userId)=>{
 	}
 }))
 
-app.addCommand(new Command(["alias", "a"], (args, userId)=> {
+app.addCommand(new Command(["alias", "a"], async (args, userId)=> {
 	if (args.length < 2) 
 		return getPhrase("seeUsage")
 
@@ -83,6 +83,17 @@ app.addCommand(new Command(["alias", "a"], (args, userId)=> {
 		return getPhrase("invalidAccId")
 
 	let newUser = new Alias(args[0], args[1])
+
+	try{
+
+		let checkingData = await network.fetch(`players/${newUser.accId}/matches`)
+
+		if(checkingData.length == 0)
+			return getPhrase("invalidAccId")
+
+	} catch (err) {
+		return getPhrase("invalidAccId")
+	}
 
 	app.addUser(newUser)
 
@@ -247,7 +258,7 @@ app.addCommand(new Command(["hero", "h"], async (args, userId) => {
 
 	let wl = await network.fetch(`players/${user.accId}/wl?hero_id=${heroId}`, app.cache)
 
-	return getPhrase("heroWinrate").format(user.name, hero[0].localized_name, (wl.win/(wl.lose+wl.win)*100).toLocaleString(undefined, {maxFractiondigits:2}))
+	return getPhrase("heroWinrate").format(user.name, hero[0].localized_name, (wl.win/(wl.lose+wl.win)*100).toLocaleString(undefined, {maxFractionDigits:2}))
 }))
 
 app.addCommand(new Command(["aliases"], (args, userId) => {

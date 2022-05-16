@@ -56,14 +56,14 @@ _статистика за 20 игр_
 
 **[last]**
 !last [alias]
-!last alise hero_damage
+!last alise hero\_damage
 !last alise
 !last
-_данные о прошлой игре; можно вторым аргументом указать один из показателей: net\_worth, level, party\_size, hero\_damage, hero\_healing, tower\_damage, gold\_per\_min, xp\_per\_min, personaname _
+_данные о прошлой игре; можно вторым аргументом указать один из показателей:_ net\_worth, level, party\_size, hero\_damage, hero\_healing, tower\_damage, gold\_per\_min, xp\_per\_min, personaname
 
 **[game] g**
 !game [alias] [offset]
-!g alise 2 party_size
+!g alise 2 party\_size
 !g alise 2 
 !g
 _аналогична last, только можно указать номер игры (последняя - 1, предпоследняя - 2...)_
