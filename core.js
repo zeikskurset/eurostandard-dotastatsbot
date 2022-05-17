@@ -20,7 +20,7 @@ class App {
 			this.cache = cache.loadLatest()
 
 		try {
-			this.commandsInfo = fs.readFileSync('./commands.txt', 'utf8')
+			this.commandsInfo = JSON.parse(fs.readFileSync('./commands.json', 'utf8'))
 		} catch (err) {
 			console.log(err)
 		}

@@ -33,7 +33,13 @@ let app = new App();
 //commands
 
 app.addCommand(new Command(["commands"], (args, userId)=>{
-	return app.commandsInfo;
+	let commandslist = Object.keys(app.commandsInfo).join(' ') + "\n" + getPhrase("helpWithCommand") 
+	let fittingCommand = app.commands.filter(command => command.fits(args[0]))[0]
+
+	if (args.length == 0 || typeof fittingCommand == 'undefined')
+		return commandslist
+
+	return app.commandsInfo[fittingCommand.pseudos[0]];
 }))
 
 app.addCommand(new Command(["help"], (args, userId)=>{
@@ -267,6 +273,38 @@ app.addCommand(new Command(["aliases"], (args, userId) => {
 	return app.users.map((user) => {
 		return user.name
 	}).join(' ')
+}))
+
+app.addCommand(new Command(["streak"], async (args, userId) => {
+	let user = args.length > 0 ? app.getUserByAlias(args[0]) : app.getUserByDiscordId(userId)
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	let games = await network.fetch(`players/${user.accId}/matches`, app.cache)
+	let count = 1
+	let i = 1
+	let win = utility.playerWon(games[0])
+	while(utility.playerWon(games[i]) == win){
+		count++
+		i++
+	}
+
+	return getPhrase("streak").format(user.name, win ? "win" : "lose", count) + (count > config.largeStreak ? getPhrase("largeStreak") : "")
+}))
+
+app.addCommand(new Command(["gamehistory", "history"], async (args, userId) =>{
+	let user = args.length > 0 ? app.getUserByAlias(args[0]) : app.getUserByDiscordId(userId)
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	let limit = args.length > 1 ? args[1] : 5
+	limit = limit > 20 ? 20 : limit
+	let games = await network.fetch(`players/${user.accId}/matches?limit=${limit}`, app.cache)
+
+	return games.map((game) => {
+		return `__**${utility.playerWon(game) ? "W" : "L"}**__ ${app.dotaconstants.heroes[game.hero_id].localized_name} _${game.kills} ${game.deaths} ${game.assists}_\n`
+	}).join()
+
 }))
 
 

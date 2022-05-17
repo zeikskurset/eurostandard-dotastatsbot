@@ -6,5 +6,6 @@
 	"maxSimultFetch": 20,
 	"maxCallsPerMinute": 50,
 	"language": "ru",
-	"criteriae": ["wins", "games", "winrate", "gpm", "xpm", "kills", "deaths", "kda", "lasthit", "leaver", "damage", "heal", "tower"]
+	"criteriae": ["wins", "games", "winrate", "gpm", "xpm", "kills", "deaths", "kda", "lasthit", "leaver", "damage", "heal", "tower"],
+	"largeStreak": 5
 }
