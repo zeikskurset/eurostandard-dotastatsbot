@@ -86,7 +86,7 @@ app.addCommand(new Command(["alias", "a"], async (args, userId)=> {
 
 	try{
 
-		let checkingData = await network.fetch(`players/${newUser.accId}/matches`)
+		let checkingData = await network.fetch(`players/${newUser.accId}/matches`, app.cache)
 
 		if(checkingData.length == 0)
 			return getPhrase("invalidAccId")
