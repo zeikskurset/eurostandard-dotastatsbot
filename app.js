@@ -52,6 +52,7 @@ app.addCommand(new Command(["deletecache"], (args, userId)=>{
 		if(!app.cache[urlext].permanent)
 			delete app.cache[urlext]
 	}
+	cache.dump(app.cache)
 	return getPhrase("cacheCleared")
 }))
 
