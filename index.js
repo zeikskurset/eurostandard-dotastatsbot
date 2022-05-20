@@ -14,6 +14,10 @@ client.on("messageCreate", async function (message) {
   });
   const command = args.shift().toLowerCase();
 
+  let sender = app.getUserByDiscordId(message.member.user.id)
+
+  console.log("Got command: " + message.content + " from " + (sender ? sender.alias : `??? (discord id: ${message.member.user.id})`))
+
   try {
   	app.handle(command, args, message.member.user.id).then((res)=>{
 			message.reply(res);
