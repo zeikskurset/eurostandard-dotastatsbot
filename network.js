@@ -12,7 +12,7 @@ let fetchLeaderboard = async function(cache, leaderboard, criteria, playerlimit,
 
 	const urlExtEnding = wlCrit ? "wl" : "recentMatches" 
 
-	const urlParam = gameslimit == 0 ? "" : "?limit=" + gameslimit
+	const urlParam = wlCrit && gameslimit == 0 ? "" : "?limit=" + gameslimit
 
 	for(let user of leaderboard) {
 		urlexts.push({urlext: `players/${user.accId}/${urlExtEnding}${urlParam}`, alias: user.name})
@@ -20,9 +20,10 @@ let fetchLeaderboard = async function(cache, leaderboard, criteria, playerlimit,
 
 	results = await fetchMany(cache, urlexts);
 
-	results.map((player) => {
-		player.data = player.data.slice(0, gameslimit)
-	})
+	if (!wlCrit && gameslimit != 0)
+		results.map((player) => {
+			player.data = player.data.slice(0, gameslimit)
+		})
 
 	results = results.map(fns[criteria]).sort((a,b) => { return b.data - a.data})
 
