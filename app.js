@@ -243,7 +243,8 @@ app.addCommand(new Command(["wordcloud", "w"], async (args, userId) => {
 
 	let wordcloud = await network.fetch(`players/${user.accId}/wordcloud`, app.cache)
 	wordcloud = wordcloud["my_word_counts"]
-	if (wordcloud.length == 0) 
+	
+	if (Object.keys(wordcloud).length == 0) 
 		return getPhrase("noData")
 
 	if(args.length > 1) 
