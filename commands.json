@@ -1,10 +1,10 @@
 {
-  "commands": "**[commands]**\n_вывести этот файл_",
+  "commands": "**[commands]**\n_ты дурак?_",
   "alias": "**[alias] a**\n!alias [alias] [account id] [iam] [enter]\n!a alise 148814881 iam enter\n!a alise 148814881 iam\n!a alise 148814881 \n_установить алиас, iam - привязка к дискорду, enter - добавление в лидерборд_",
   "iam": "**[iam]**\n!iam [alias]\n!iam alise\n!iam\n_привязать алиас к дискорду или узнать привязанный алиас_\n",
   "leaderboard": "**[leaderboard] all**\n_сравнить всех игроков лидерборда по указанному параметру_\n!leaderboard [**wins**/matches/winrate] [limit=all games]\n!all matches 100\n!all winrate\n!all\n_винрейт считается по всем играм, либо по указанному числу игр_\n!leaderboard [gpm/xpm/damage/kills/deaths/kda/leaver] [limit=20(max)]\n!all kills 20 \n!all kills\n_показатель считается по 20 играм, либо по указанному меньшему числу игр. потом прикручу возможность сравнивать кда по всем играм_\n",
   "leaders": "**[leaders] l**\n!l kills 10 5\n!l\n_аналогично предыдущей команде, только выводит 3 лучших, либо n лучших (n указывать в конце)_\n",
-  "best": "**[best]**\n!best kills 10\n!best\n_аналогично двум предыдущим, но выводит только одного игрока_\n",
+  "best": "**[best]**\n!best kills 10\n!best\n_аналогично leaderboard и leaders, но выводит только одного игрока_\n",
   "enterleaderboard": "**[enterleaderboard] enter**\n!enterleaderboard [alias]\n!enter alise\n!enter\n_добавить алиас в лидерборд_\n",
   "leaveleaderboard": "**[leaveleaderboard] leave**\n!leaveleaderboard [alise]\n!leave alise\n!leave\n_убрать алиас из лидерборда_\n",
   "stats": "**[stats] s**\n!stats [alias]\n!s alise\n!s\n_статистика за 20 игр_\n",
@@ -13,7 +13,12 @@
   "hero": "**[hero] h**\n!hero [alias] [hero]\n!h alise lone\n_винрейт на герое_\n",
   "streak": "**[streak]**\n!streak alise\n!streak\n_узнать стрик_\n",
   "gamehistory": "**[gamehistory] history**\n!history [alias] [gamesnum=5]\n!history alise 10\n!history alise\n!history\n_посмотреть историю игр_\n",
+  "with": "**[with]**\n!with belbub lyonya\n!with belbub\n_винрейт в играх с перечисленными людьми. свой алиас указывать не нужно, но необходимо чтобы он был привязан_",
   "wordcloud": "**[wordcloud] w**\n!w [alias] [word]\n!w alise бруда\n!w alise\n!w\n_посмотреть какие слова кто писал в чат (вероятно только в анранкеде)_\n",
   "aliases": "**[aliases]**\n!aliases\n_посмотреть список алиасов_\n",
-  "deletecache": "**[deletecache]**\n!deletecache\n_удаляет временный кэш бота, может помочь если инфа не обновляется после игры_\n"
+  "removealias": "**[removealias]**\n!removealias alise\n_удалить нужный алиас_",
+  "renamealias": "**[renamealias]**\n!renamealias леша lyosha\n_переименовать нужный алиас_",
+  "deletecache": "**[deletecache]**\n!deletecache\n_удаляет временный кэш бота, может помочь если инфа не обновляется после игры_\n",
+  "besthero": "**[besthero]**\n!besthero alise\n!besthero\n_лучший герой игрока по мнению opendota_",
+  "worsthero": "**[worsthero]**\n!worsthero alise\n!worsthero\n_худший герой игрока по мнению opendota_"
 }

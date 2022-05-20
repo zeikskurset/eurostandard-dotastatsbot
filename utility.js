@@ -10,7 +10,7 @@ module.exports.playerWon = function(game) {
 }
 
 module.exports.validAccId = function(id) {
-	return /^\d\d\d\d\d\d\d\d\d$/.test(id)
+	return /^\d{8,10}$/.test(id)
 }
 
 module.exports.stringifyLeaderboard = function(criteria, leaderboard) {

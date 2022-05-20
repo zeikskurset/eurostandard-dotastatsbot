@@ -7,5 +7,8 @@
 	"maxCallsPerMinute": 50,
 	"language": "ru",
 	"criteriae": ["wins", "games", "winrate", "gpm", "xpm", "kills", "deaths", "kda", "lasthit", "leaver", "damage", "heal", "tower"],
-	"largeStreak": 5
+	"largeStreak": 5,
+	"respectedHeroes": [5, 14, 42],
+	"disrespectedHeroes": [82, 34, 61, 17, 47, 92],
+	"wordcloudSampleSize": 10
 }

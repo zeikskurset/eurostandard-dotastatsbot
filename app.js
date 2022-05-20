@@ -71,6 +71,7 @@ app.addCommand(new Command(["iam"], (args, userId)=>{
 		if(!user) 
 			return getPhrase("noSuchAlias")
 
+		delete app.getUserByDiscordId(userId).discordId
 		user.discordId = userId
 		app.dumpUsers()
 
@@ -128,6 +129,7 @@ app.addCommand(new Command(["enterleaderboard", "enter"], (args, userId) => {
 	if(user.inLeaderboard)
 		return getPhrase("alreadyInLeaderboard")
 	user.inLeaderboard = true
+	app.dumpUsers()
 	return getPhrase("leaderboardSuccess")
 }))
 
@@ -138,6 +140,7 @@ app.addCommand(new Command(["leaveleaderboard", "leave"], (args, userId) => {
 	if(!user.inLeaderboard)
 		return getPhrase("notInLeaderboard")
 	user.inLeaderboard = false
+	app.dumpUsers()
 	return getPhrase("leaderboardLeaveSuccess")
 }))
 
@@ -240,10 +243,20 @@ app.addCommand(new Command(["wordcloud", "w"], async (args, userId) => {
 	let wordcloud = await network.fetch(`players/${user.accId}/wordcloud`, app.cache)
 	wordcloud = wordcloud["my_word_counts"]
 
-	let keys = Object.keys(wordcloud)
-	let word = args.length > 1 ? args[1] : keys[ keys.length * Math.random() << 0]
+	if(args.length > 1) 
+		return getPhrase("wordcloud").format(user.name, args[1], wordcloud[args[1]] ? wordcloud[args[1]] : 0)
 
-	return getPhrase("wordcloud").format(user.name, word, wordcloud[word] ? wordcloud[word] : 0)
+	let keys = Object.keys(wordcloud)
+	let ans = ""
+	for (let i = 0; i < config.wordcloudSampleSize; i++) {
+		let word = ""
+		while (word.length < 3)
+			word = args.length > 1 ? args[1] : keys[ keys.length * Math.random() << 0]
+		ans += getPhrase("wordcloud").format(user.name, word, wordcloud[word]) + "\n"
+	}
+	
+
+	return ans
 }))
 
 app.addCommand(new Command(["hero", "h"], async (args, userId) => {
@@ -266,7 +279,12 @@ app.addCommand(new Command(["hero", "h"], async (args, userId) => {
 
 	let wl = await network.fetch(`players/${user.accId}/wl?hero_id=${heroId}`, app.cache)
 
-	return getPhrase("heroWinrate").format(user.name, hero[0].localized_name, (wl.win/(wl.lose+wl.win)*100).toLocaleString(undefined, {maxFractionDigits:2}))
+	let winrate = wl.win/(wl.lose+wl.win)*100
+
+	if(isNaN(winrate))
+		return getPhrase("noGames")
+
+	return getPhrase("heroWinrate").format(user.name, hero[0].localized_name, winrate.toLocaleString(undefined, {maxFractionDigits:2}))
 }))
 
 app.addCommand(new Command(["aliases"], (args, userId) => {
@@ -305,6 +323,98 @@ app.addCommand(new Command(["gamehistory", "history"], async (args, userId) =>{
 		return `__**${utility.playerWon(game) ? "W" : "L"}**__ ${app.dotaconstants.heroes[game.hero_id].localized_name} _${game.kills} ${game.deaths} ${game.assists}_\n`
 	}).join()
 
+}))
+
+app.addCommand(new Command(["removealias"], (args, userId) => {
+	if (args.length == 0) 
+		return getPhrase("seeUsage")
+
+	app.users = app.users.filter((user) => {
+		return user.name != args[0]
+	})
+
+	app.dumpUsers()
+
+	return getPhrase("aliasRemoveSuccess").format(args[0])
+}))
+
+app.addCommand(new Command(["with"], async (args, userId) => {
+	let user = app.getUserByDiscordId(userId)
+	if(typeof user == 'undefined' || args.length == 0)
+		return getPhrase("seeUsage")
+
+	let urlext = `players/${user.accId}/wl?`
+	args = args.filter((alias) => {
+		return typeof app.getUserByAlias(alias) != "undefined"
+	})
+
+	if(args.length == 0) 
+		return getPhrase("noSuchAlias")
+
+	args.map((alias) => {
+		let companion = app.getUserByAlias(alias)
+		urlext += `included_account_id=${companion.accId}&`
+	})
+
+	let results = await network.fetch(urlext, app.cache)
+
+	let winrate = (results.win/(results.lose+results.win))*100
+
+	if (isNaN(winrate))
+		return getPhrase("noGames")
+
+
+	return getPhrase("winrateWith").format(user.name, args.join(' '), winrate.toLocaleString(undefined, {maxFractionDigits: 2}))
+}))
+
+app.addCommand(new Command(["renamealias"], (args, userId) => {
+	if (args.length < 2)
+		return getPhrase("seeUsage")
+
+	let user = app.getUserByAlias(args[0])
+
+	if(typeof user == "undefined")
+		return getPhrase("noSuchAlias")
+
+	user.name = args[1]
+
+	app.dumpUsers()
+
+	return getPhrase("aliasRenameSuccess")
+}))
+
+async function handleHero(args, userId, best) {
+	let user = args.length > 0 ? app.getUserByAlias(args[0]) : app.getUserByDiscordId(userId)
+	if(typeof user == "undefined")
+		return getPhrase("noAlias")
+
+	let heroRankings = await network.fetch(`players/${user.accId}/rankings`, app.cache)
+
+	if (heroRankings.length == 0) 
+		return getPhrase("noData")
+
+	let besthero = heroRankings[best ? 0 : heroRankings.length - 1]
+
+	let answer = getPhrase(best ? "besthero" : "worsthero").format(app.dotaconstants.heroes[besthero.hero_id].localized_name, (besthero.percent_rank*100).toLocaleString(undefined, {maxFractionDigits: 4, minFractionDigits: 4}))
+
+	if (config.respectedHeroes.includes(besthero.hero_id) && best)
+		answer += getPhrase("respect")
+
+	if (config.disrespectedHeroes.includes(besthero.hero_id) && best)
+		answer += getPhrase("disrespect")
+
+	if (besthero.hero_id == 42)
+		answer += getPhrase("evilArthas")
+
+	return answer
+}
+
+app.addCommand(new Command(["besthero"], async (args, userId) => {
+	return handleHero(args, userId, true)	
+}))
+
+app.addCommand(new Command(["worsthero"], async (args, userId) => {
+	return handleHero(args, userId, false)	
 }))
 
 

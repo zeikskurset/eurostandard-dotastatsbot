@@ -9,7 +9,9 @@ client.on("messageCreate", async function (message) {
   if (!message.content.startsWith(config.prefix)) return;
 
   const commandBody = message.content.slice(config.prefix.length);
-  const args = commandBody.split(' ');
+  const args = commandBody.split(' ').filter((arg) => {
+    return arg != ""
+  });
   const command = args.shift().toLowerCase();
 
   try {

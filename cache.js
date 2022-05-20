@@ -3,10 +3,7 @@ const fs = require('fs')
 
 exports.dump = function(data){
 	console.log("Dumping cache")
-	fs.writeFile(config.cacheFilename, JSON.stringify(data), (err) => {
-		if (err)
-			console.log(err)
-	})
+	fs.writeFileSync(config.cacheFilename, JSON.stringify(data))
 }
 
 exports.loadLatest = function(){

@@ -20,6 +20,10 @@ let fetchLeaderboard = async function(cache, leaderboard, criteria, playerlimit,
 
 	results = await fetchMany(cache, urlexts);
 
+	results.map((player) => {
+		player.data = player.data.slice(0, gameslimit)
+	})
+
 	results = results.map(fns[criteria]).sort((a,b) => { return b.data - a.data})
 
 	if (playerlimit!==0) {
