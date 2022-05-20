@@ -20,6 +20,7 @@ client.on("messageCreate", async function (message) {
 
   try {
   	app.handle(command, args, message.member.user.id).then((res)=>{
+      console.log(`Answering to ${command}: ${res.slice(0, 40)}`)
 			message.reply(res);
   	})
   } catch (err) {
